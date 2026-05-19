@@ -145,6 +145,15 @@ alter table public.pre_purchase_checks enable row level security;
 alter table public.consultations enable row level security;
 alter table public.conversation_guides enable row level security;
 
+drop policy if exists "own parent profile" on public.parent_profiles;
+drop policy if exists "own child profiles" on public.child_profiles;
+drop policy if exists "own wallets" on public.wallets;
+drop policy if exists "own wallet transactions" on public.wallet_transactions;
+drop policy if exists "own wish items" on public.wish_items;
+drop policy if exists "own pre purchase checks" on public.pre_purchase_checks;
+drop policy if exists "own consultations" on public.consultations;
+drop policy if exists "active guides readable" on public.conversation_guides;
+
 create policy "own parent profile" on public.parent_profiles for all using (user_id = auth.uid()) with check (user_id = auth.uid());
 create policy "own child profiles" on public.child_profiles for all using (parent_user_id = auth.uid()) with check (parent_user_id = auth.uid());
 create policy "own wallets" on public.wallets for all using (parent_user_id = auth.uid()) with check (parent_user_id = auth.uid());

@@ -2,13 +2,8 @@
 
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
-import { z } from "zod";
-import { authSchema } from "@/lib/validations/auth";
+import { loginSchema, resendEmailSchema, signupSchema } from "@/lib/validations/auth";
 import { createClient } from "@/lib/supabase/server";
-
-const resendSchema = z.object({
-  email: z.string().email("メールアドレスを入力してください"),
-});
 
 function authErrorMessage(message: string) {
   const normalized = message.toLowerCase();
@@ -37,8 +32,11 @@ async function currentOrigin() {
 }
 
 export async function signUpAction(formData: FormData) {
-  const parsed = authSchema.safeParse(Object.fromEntries(formData));
-  if (!parsed.success) redirect(`/signup?error=${encodeURIComponent(firstValidationMessage(parsed.error))}`);
+  const email = String(formData.get("email") ?? "");
+  const parsed = signupSchema.safeParse(Object.fromEntries(formData));
+  if (!parsed.success) {
+    redirect(`/signup?email=${encodeURIComponent(email)}&error=${encodeURIComponent(firstValidationMessage(parsed.error))}`);
+  }
 
   const supabase = await createClient();
   const origin = await currentOrigin();
@@ -50,7 +48,14 @@ export async function signUpAction(formData: FormData) {
       emailRedirectTo: `${origin}/setup/child`,
     },
   });
-  if (error || !data.user) redirect(`/signup?error=${encodeURIComponent(authErrorMessage(error?.message ?? "登録に失敗しました"))}`);
+
+  if (error || !data.user) {
+    redirect(
+      `/signup?email=${encodeURIComponent(parsed.data.email)}&error=${encodeURIComponent(
+        authErrorMessage(error?.message ?? "登録に失敗しました"),
+      )}`,
+    );
+  }
 
   if (data.session) {
     await supabase.from("parent_profiles").upsert(
@@ -67,7 +72,7 @@ export async function signUpAction(formData: FormData) {
 }
 
 export async function resendConfirmationEmail(formData: FormData) {
-  const parsed = resendSchema.safeParse(Object.fromEntries(formData));
+  const parsed = resendEmailSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) {
     redirect(`/signup/check-email?error=${encodeURIComponent(firstValidationMessage(parsed.error))}`);
   }
@@ -90,8 +95,10 @@ export async function resendConfirmationEmail(formData: FormData) {
 }
 
 export async function loginAction(formData: FormData) {
-  const parsed = authSchema.safeParse(Object.fromEntries(formData));
-  if (!parsed.success) redirect(`/login?error=${encodeURIComponent("メールアドレスとパスワードを入力してください")}`);
+  const parsed = loginSchema.safeParse(Object.fromEntries(formData));
+  if (!parsed.success) {
+    redirect(`/login?error=${encodeURIComponent(firstValidationMessage(parsed.error))}`);
+  }
 
   const supabase = await createClient();
   const { error } = await supabase.auth.signInWithPassword(parsed.data);

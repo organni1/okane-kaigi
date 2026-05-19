@@ -6,6 +6,7 @@ import { CheckStepCard } from "@/components/child/CheckStepCard";
 import { ErrorMessage } from "@/components/common/ErrorMessage";
 import { AppShell } from "@/components/layout/AppShell";
 import { PageHeader } from "@/components/layout/PageHeader";
+import { isChildModeVerified } from "@/lib/auth/childMode";
 import { getSessionUser } from "@/lib/supabase/server";
 
 export default async function CheckPage({ params, searchParams }: { params: Promise<{ childId: string; id: string }>; searchParams: Promise<{ error?: string }> }) {
@@ -13,6 +14,7 @@ export default async function CheckPage({ params, searchParams }: { params: Prom
   const query = await searchParams;
   const { supabase, user } = await getSessionUser();
   if (!user) redirect("/login");
+  if (!(await isChildModeVerified(childId))) redirect(`/child/${childId}/pin`);
 
   const { data: item } = await supabase.from("wish_items").select("*").eq("id", id).eq("child_profile_id", childId).eq("parent_user_id", user.id).single();
   if (!item) redirect(`/child/${childId}/wish-items`);

@@ -5,6 +5,7 @@ import { BigChildButton } from "@/components/child/BigChildButton";
 import { WishItemCard } from "@/components/child/WishItemCard";
 import { EmptyState } from "@/components/common/EmptyState";
 import { ChildShell } from "@/components/layout/ChildShell";
+import { isChildModeVerified } from "@/lib/auth/childMode";
 import { getSessionUser } from "@/lib/supabase/server";
 import type { WishItem } from "@/types/database";
 
@@ -12,6 +13,7 @@ export default async function ChildWishItemsPage({ params }: { params: Promise<{
   const { childId } = await params;
   const { supabase, user } = await getSessionUser();
   if (!user) redirect("/login");
+  if (!(await isChildModeVerified(childId))) redirect(`/child/${childId}/pin`);
 
   const { data: child } = await supabase.from("child_profiles").select("id").eq("id", childId).eq("parent_user_id", user.id).single();
   if (!child) redirect("/child/select");

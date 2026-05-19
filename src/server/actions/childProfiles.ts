@@ -2,6 +2,7 @@
 
 import bcrypt from "bcryptjs";
 import { redirect } from "next/navigation";
+import { markChildModeVerified } from "@/lib/auth/childMode";
 import { getSessionUser } from "@/lib/supabase/server";
 import { childProfileSchema, pinSchema } from "@/lib/validations/child";
 
@@ -50,9 +51,14 @@ export async function createChildProfileWithWallet(formData: FormData) {
     });
   }
 
-  await supabase
-    .from("parent_profiles")
-    .upsert({ user_id: user.id, onboarding_completed: true }, { onConflict: "user_id" });
+  await supabase.from("parent_profiles").upsert(
+    {
+      user_id: user.id,
+      display_name: user.email?.split("@")[0] ?? null,
+      onboarding_completed: true,
+    },
+    { onConflict: "user_id" },
+  );
 
   redirect("/parent/dashboard");
 }
@@ -76,5 +82,6 @@ export async function verifyChildPin(childId: string, formData: FormData) {
   const ok = await bcrypt.compare(parsed.data.pin, child.pin_hash);
   if (!ok) redirect(`/child/${childId}/pin?error=${encodeURIComponent("PINが違います")}`);
 
+  await markChildModeVerified(childId);
   redirect(`/child/${childId}/home`);
 }

@@ -97,6 +97,9 @@ create table if not exists public.consultations (
   updated_at timestamptz not null default now()
 );
 
+create unique index if not exists consultations_one_per_wish_item
+  on public.consultations (wish_item_id);
+
 create table if not exists public.conversation_guides (
   id uuid primary key default gen_random_uuid(),
   trigger_type text not null,

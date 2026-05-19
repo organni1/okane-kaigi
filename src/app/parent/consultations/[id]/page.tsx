@@ -11,6 +11,7 @@ import { StatusBadge } from "@/components/common/StatusBadge";
 import { categoryImage, categoryLabel } from "@/lib/constants/categories";
 import { getSessionUser } from "@/lib/supabase/server";
 import { formatCurrency } from "@/lib/utils/formatCurrency";
+import { markWishItemPurchased } from "@/server/actions/wallet";
 
 export default async function ConsultationDetailPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ error?: string; saved?: string }> }) {
   const { id } = await params;
@@ -76,6 +77,16 @@ export default async function ConsultationDetailPage({ params, searchParams }: {
           </div>
         </section>
         <ConversationGuideCard guide={guide} />
+        {item?.status === "approved" ? (
+          <form action={markWishItemPurchased} className="soft-card grid gap-3 rounded-3xl p-5">
+            <input type="hidden" name="consultation_id" value={consultation.id} />
+            <input type="hidden" name="wish_item_id" value={item.id} />
+            <p className="font-bold text-gray-600">購入したら、子どもの今あるお金から金額を引いて「買ったもの」にできます。</p>
+            <button className="min-h-12 rounded-2xl bg-blue-600 px-4 py-3 text-lg font-black text-white">
+              購入済みにして残高から引く
+            </button>
+          </form>
+        ) : null}
         <ConsultationDecisionForm consultationId={consultation.id} />
       </div>
     </ParentShell>

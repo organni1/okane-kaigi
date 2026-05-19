@@ -7,6 +7,7 @@ import { ErrorMessage } from "@/components/common/ErrorMessage";
 import { Field } from "@/components/common/Field";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { AppShell } from "@/components/layout/AppShell";
+import { isChildModeVerified } from "@/lib/auth/childMode";
 import { CATEGORIES } from "@/lib/constants/categories";
 import { getSessionUser } from "@/lib/supabase/server";
 import { createWishItem } from "@/server/actions/wishItems";
@@ -16,6 +17,7 @@ export default async function NewWishItemPage({ params, searchParams }: { params
   const query = await searchParams;
   const { supabase, user } = await getSessionUser();
   if (!user) redirect("/login");
+  if (!(await isChildModeVerified(childId))) redirect(`/child/${childId}/pin`);
 
   const { data: child } = await supabase.from("child_profiles").select("id").eq("id", childId).eq("parent_user_id", user.id).single();
   if (!child) redirect("/child/select");

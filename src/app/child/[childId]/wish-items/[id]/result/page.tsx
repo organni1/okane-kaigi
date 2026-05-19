@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 import { ResultCard } from "@/components/child/ResultCard";
 import { AppShell } from "@/components/layout/AppShell";
 import { PageHeader } from "@/components/layout/PageHeader";
+import { isChildModeVerified } from "@/lib/auth/childMode";
 import { categoryImage } from "@/lib/constants/categories";
 import { getSessionUser } from "@/lib/supabase/server";
 
@@ -13,6 +14,7 @@ export default async function ResultPage({ params }: { params: Promise<{ childId
   const { childId, id } = await params;
   const { supabase, user } = await getSessionUser();
   if (!user) redirect("/login");
+  if (!(await isChildModeVerified(childId))) redirect(`/child/${childId}/pin`);
 
   const { data: item } = await supabase.from("wish_items").select("*").eq("id", id).eq("child_profile_id", childId).eq("parent_user_id", user.id).single();
   if (!item) redirect(`/child/${childId}/wish-items`);

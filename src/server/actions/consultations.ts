@@ -10,7 +10,11 @@ export async function submitPrePurchaseCheckAndConsultation(formData: FormData) 
   if (!user) redirect("/login");
 
   const parsed = prePurchaseCheckSchema.safeParse(Object.fromEntries(formData));
-  if (!parsed.success) redirect(`/child/${formData.get("child_profile_id")}/wish-items/${formData.get("wish_item_id")}/check?error=${encodeURIComponent("入力内容を確認してください")}`);
+  if (!parsed.success) {
+    redirect(
+      `/child/${formData.get("child_profile_id")}/wish-items/${formData.get("wish_item_id")}/check?error=${encodeURIComponent("入力内容を確認してください")}`,
+    );
+  }
 
   const payload = {
     parent_user_id: user.id,
@@ -27,15 +31,28 @@ export async function submitPrePurchaseCheckAndConsultation(formData: FormData) 
   };
 
   const { error: checkError } = await supabase.from("pre_purchase_checks").upsert(payload, { onConflict: "wish_item_id" });
-  if (checkError) redirect(`/child/${parsed.data.child_profile_id}/wish-items/${parsed.data.wish_item_id}/check?error=${encodeURIComponent(checkError.message)}`);
+  if (checkError) {
+    redirect(`/child/${parsed.data.child_profile_id}/wish-items/${parsed.data.wish_item_id}/check?error=${encodeURIComponent(checkError.message)}`);
+  }
 
-  await supabase.from("wish_items").update({ status: "consulting" }).eq("id", parsed.data.wish_item_id);
-  await supabase.from("consultations").insert({
-    parent_user_id: user.id,
-    child_profile_id: parsed.data.child_profile_id,
-    wish_item_id: parsed.data.wish_item_id,
-    status: "open",
-  });
+  const { data: existingConsultation } = await supabase
+    .from("consultations")
+    .select("id,status")
+    .eq("parent_user_id", user.id)
+    .eq("wish_item_id", parsed.data.wish_item_id)
+    .maybeSingle();
+
+  if (!existingConsultation) {
+    await supabase.from("consultations").insert({
+      parent_user_id: user.id,
+      child_profile_id: parsed.data.child_profile_id,
+      wish_item_id: parsed.data.wish_item_id,
+      status: "open",
+    });
+    await supabase.from("wish_items").update({ status: "consulting" }).eq("id", parsed.data.wish_item_id);
+  } else if (existingConsultation.status === "open") {
+    await supabase.from("wish_items").update({ status: "consulting" }).eq("id", parsed.data.wish_item_id);
+  }
 
   redirect(`/child/${parsed.data.child_profile_id}/wish-items/${parsed.data.wish_item_id}/result`);
 }
@@ -45,7 +62,9 @@ export async function decideConsultation(formData: FormData) {
   if (!user) redirect("/login");
 
   const parsed = consultationDecisionSchema.safeParse(Object.fromEntries(formData));
-  if (!parsed.success) redirect(`/parent/consultations/${formData.get("consultation_id")}?error=${encodeURIComponent("入力内容を確認してください")}`);
+  if (!parsed.success) {
+    redirect(`/parent/consultations/${formData.get("consultation_id")}?error=${encodeURIComponent("入力内容を確認してください")}`);
+  }
 
   const { data: consultation, error } = await supabase
     .from("consultations")
@@ -60,7 +79,9 @@ export async function decideConsultation(formData: FormData) {
     .select("wish_item_id")
     .single();
 
-  if (error || !consultation) redirect(`/parent/consultations/${parsed.data.consultation_id}?error=${encodeURIComponent(error?.message ?? "保存に失敗しました")}`);
+  if (error || !consultation) {
+    redirect(`/parent/consultations/${parsed.data.consultation_id}?error=${encodeURIComponent(error?.message ?? "保存に失敗しました")}`);
+  }
 
   await supabase
     .from("wish_items")

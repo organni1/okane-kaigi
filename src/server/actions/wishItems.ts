@@ -9,7 +9,9 @@ export async function createWishItem(formData: FormData) {
   if (!user) redirect("/login");
 
   const parsed = wishItemSchema.safeParse(Object.fromEntries(formData));
-  if (!parsed.success) redirect(`/child/${formData.get("child_profile_id")}/wish-items/new?error=${encodeURIComponent("入力内容を確認してください")}`);
+  if (!parsed.success) {
+    redirect(`/child/${formData.get("child_profile_id")}/wish-items/new?error=${encodeURIComponent("入力内容を確認してください")}`);
+  }
 
   const { data, error } = await supabase
     .from("wish_items")
@@ -27,7 +29,9 @@ export async function createWishItem(formData: FormData) {
     .select("id")
     .single();
 
-  if (error || !data) redirect(`/child/${parsed.data.child_profile_id}/wish-items/new?error=${encodeURIComponent(error?.message ?? "登録に失敗しました")}`);
+  if (error || !data) {
+    redirect(`/child/${parsed.data.child_profile_id}/wish-items/new?error=${encodeURIComponent(error?.message ?? "登録に失敗しました")}`);
+  }
 
   redirect(`/child/${parsed.data.child_profile_id}/wish-items/${data.id}/check`);
 }

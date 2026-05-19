@@ -1,0 +1,26 @@
+import { Button } from "@/components/common/Button";
+import { adjustWalletBalance } from "@/server/actions/wallet";
+import type { ChildProfile } from "@/types/database";
+
+export function WalletAdjustmentForm({ childrenList }: { childrenList: ChildProfile[] }) {
+  return (
+    <form action={adjustWalletBalance} className="soft-card grid gap-4 rounded-3xl p-5">
+      <select name="child_profile_id" className="min-h-12 rounded-2xl border border-orange-100 p-3" required>
+        {childrenList.map((child) => (
+          <option key={child.id} value={child.id}>
+            {child.nickname}
+          </option>
+        ))}
+      </select>
+      <select name="transaction_type" className="min-h-12 rounded-2xl border border-orange-100 p-3" defaultValue="income">
+        <option value="income">追加する</option>
+        <option value="spending">減らす</option>
+        <option value="refund">返す</option>
+      </select>
+      <input name="amount" type="number" min="1" placeholder="金額" className="min-h-12 rounded-2xl border border-orange-100 p-3" required />
+      <input name="category" placeholder="理由カテゴリ" className="min-h-12 rounded-2xl border border-orange-100 p-3" />
+      <textarea name="memo" placeholder="メモ" className="min-h-20 rounded-2xl border border-orange-100 p-3" />
+      <Button type="submit">保存する</Button>
+    </form>
+  );
+}

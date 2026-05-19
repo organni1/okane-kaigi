@@ -13,12 +13,19 @@ function authErrorMessage(message: string) {
   if (normalized.includes("invalid login credentials")) {
     return "メールアドレスまたはパスワードが違います";
   }
+  if (normalized.includes("password")) {
+    return "パスワードの条件を確認してください";
+  }
   return message;
+}
+
+function firstValidationMessage(error: { issues: { message: string }[] }) {
+  return error.issues[0]?.message ?? "入力内容を確認してください";
 }
 
 export async function signUpAction(formData: FormData) {
   const parsed = authSchema.safeParse(Object.fromEntries(formData));
-  if (!parsed.success) redirect(`/signup?error=${encodeURIComponent("入力内容を確認してください")}`);
+  if (!parsed.success) redirect(`/signup?error=${encodeURIComponent(firstValidationMessage(parsed.error))}`);
 
   const supabase = await createClient();
   const headerStore = await headers();
@@ -31,7 +38,7 @@ export async function signUpAction(formData: FormData) {
       emailRedirectTo: `${origin}/setup/child`,
     },
   });
-  if (error || !data.user) redirect(`/signup?error=${encodeURIComponent(error?.message ?? "登録に失敗しました")}`);
+  if (error || !data.user) redirect(`/signup?error=${encodeURIComponent(authErrorMessage(error?.message ?? "登録に失敗しました"))}`);
 
   if (data.session) {
     await supabase.from("parent_profiles").upsert(
@@ -49,7 +56,7 @@ export async function signUpAction(formData: FormData) {
 
 export async function loginAction(formData: FormData) {
   const parsed = authSchema.safeParse(Object.fromEntries(formData));
-  if (!parsed.success) redirect(`/login?error=${encodeURIComponent("入力内容を確認してください")}`);
+  if (!parsed.success) redirect(`/login?error=${encodeURIComponent("メールアドレスとパスワードを入力してください")}`);
 
   const supabase = await createClient();
   const { error } = await supabase.auth.signInWithPassword(parsed.data);

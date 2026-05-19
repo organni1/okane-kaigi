@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 import { ChevronRight, Gift, Lock } from "lucide-react";
 import { Button } from "@/components/common/Button";
 
@@ -46,6 +47,10 @@ export default function Home() {
           </article>
         ))}
       </section>
+      <footer className="mt-8 flex justify-center gap-4 text-sm font-bold text-gray-500">
+        <Link href="/terms" className="underline underline-offset-4">利用規約</Link>
+        <Link href="/privacy" className="underline underline-offset-4">プライバシーポリシー</Link>
+      </footer>
     </main>
   );
 }

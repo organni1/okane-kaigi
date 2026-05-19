@@ -16,10 +16,26 @@ export default async function SignupPage({ searchParams }: { searchParams: Promi
         </div>
         <ErrorMessage message={params.error} />
         <Field label="メールアドレス" name="email" type="email" required />
-        <Field label="パスワード" name="password" type="password" required />
-        <label className="flex items-start gap-2 text-sm font-bold text-gray-600">
+        <div className="grid gap-2">
+          <Field label="パスワード" name="password" type="password" required />
+          <div className="rounded-2xl bg-orange-50 px-4 py-3 text-sm font-bold leading-6 text-gray-600">
+            パスワードは8文字以上で、英字と数字を含めてください。
+            <br />
+            例: okane2026
+          </div>
+        </div>
+        <label className="flex items-start gap-2 text-sm font-bold leading-6 text-gray-600">
           <input type="checkbox" required className="mt-1" />
-          利用規約とプライバシーポリシーに同意します
+          <span>
+            <Link href="/terms" className="text-orange-600 underline underline-offset-4">
+              利用規約
+            </Link>
+            と
+            <Link href="/privacy" className="text-orange-600 underline underline-offset-4">
+              プライバシーポリシー
+            </Link>
+            に同意します
+          </span>
         </label>
         <Button type="submit" className="w-full">登録する</Button>
         <Link href="/login" className="text-center text-sm font-bold text-orange-600">ログインはこちら</Link>

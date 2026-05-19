@@ -26,7 +26,7 @@ export default async function ChildHomePage({ params }: { params: Promise<{ chil
     .maybeSingle();
   if (!child) redirect("/child/select");
 
-  const { data: wallet } = await supabase.from("wallets").select("*").eq("child_profile_id", childId).maybeSingle();
+  const { data: wallet } = await supabase.from("wallets").select("*").eq("child_profile_id", childId).eq("parent_user_id", user.id).maybeSingle();
   const { data: wishItemsData } = await supabase
     .from("wish_items")
     .select("*")

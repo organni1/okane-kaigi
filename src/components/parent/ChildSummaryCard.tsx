@@ -13,6 +13,7 @@ export function ChildSummaryCard({ child, wallet }: { child: ChildProfile; walle
           <p className="text-2xl font-black">{child.nickname}さん</p>
           <p className="font-bold text-gray-500">今あるお金</p>
           <p className="text-4xl font-black">{formatCurrency(wallet?.balance, child.currency_label)}</p>
+          {!wallet ? <p className="mt-1 text-xs font-bold text-red-600">walletが見つかりません。残高画面で確認してください。</p> : null}
         </div>
         <Image src="/assets/images/coin-jar.png" alt="" width={90} height={90} />
       </div>

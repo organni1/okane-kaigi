@@ -18,7 +18,14 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
         <Field label="メールアドレス" name="email" type="email" required />
         <Field label="パスワード" name="password" type="password" required />
         <Button type="submit" className="w-full">ログイン</Button>
-        <Link href="/signup" className="text-center text-sm font-bold text-orange-600">はじめての方はこちら</Link>
+        <div className="grid gap-2 text-center text-sm font-bold">
+          <Link href="/signup/check-email" className="text-blue-600">
+            確認メールが届かない場合
+          </Link>
+          <Link href="/signup" className="text-orange-600">
+            はじめての方はこちら
+          </Link>
+        </div>
       </form>
     </AppShell>
   );

@@ -2,8 +2,13 @@
 
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
+import { z } from "zod";
 import { authSchema } from "@/lib/validations/auth";
 import { createClient } from "@/lib/supabase/server";
+
+const resendSchema = z.object({
+  email: z.string().email("メールアドレスを入力してください"),
+});
 
 function authErrorMessage(message: string) {
   const normalized = message.toLowerCase();
@@ -12,6 +17,9 @@ function authErrorMessage(message: string) {
   }
   if (normalized.includes("invalid login credentials")) {
     return "メールアドレスまたはパスワードが違います";
+  }
+  if (normalized.includes("rate limit")) {
+    return "短時間にメールを送りすぎています。少し待ってから再度お試しください";
   }
   if (normalized.includes("password")) {
     return "パスワードの条件を確認してください";
@@ -23,13 +31,17 @@ function firstValidationMessage(error: { issues: { message: string }[] }) {
   return error.issues[0]?.message ?? "入力内容を確認してください";
 }
 
+async function currentOrigin() {
+  const headerStore = await headers();
+  return headerStore.get("origin") ?? process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+}
+
 export async function signUpAction(formData: FormData) {
   const parsed = authSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) redirect(`/signup?error=${encodeURIComponent(firstValidationMessage(parsed.error))}`);
 
   const supabase = await createClient();
-  const headerStore = await headers();
-  const origin = headerStore.get("origin") ?? process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+  const origin = await currentOrigin();
 
   const { data, error } = await supabase.auth.signUp({
     email: parsed.data.email,
@@ -52,6 +64,29 @@ export async function signUpAction(formData: FormData) {
   }
 
   redirect(`/signup/check-email?email=${encodeURIComponent(parsed.data.email)}`);
+}
+
+export async function resendConfirmationEmail(formData: FormData) {
+  const parsed = resendSchema.safeParse(Object.fromEntries(formData));
+  if (!parsed.success) {
+    redirect(`/signup/check-email?error=${encodeURIComponent(firstValidationMessage(parsed.error))}`);
+  }
+
+  const supabase = await createClient();
+  const origin = await currentOrigin();
+  const { error } = await supabase.auth.resend({
+    type: "signup",
+    email: parsed.data.email,
+    options: {
+      emailRedirectTo: `${origin}/setup/child`,
+    },
+  });
+
+  if (error) {
+    redirect(`/signup/check-email?email=${encodeURIComponent(parsed.data.email)}&error=${encodeURIComponent(authErrorMessage(error.message))}`);
+  }
+
+  redirect(`/signup/check-email?email=${encodeURIComponent(parsed.data.email)}&resent=1`);
 }
 
 export async function loginAction(formData: FormData) {

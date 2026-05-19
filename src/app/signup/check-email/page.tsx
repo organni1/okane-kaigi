@@ -1,9 +1,15 @@
 import Link from "next/link";
-import { MailCheck } from "lucide-react";
+import { MailCheck, Send } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
 import { Button } from "@/components/common/Button";
+import { ErrorMessage } from "@/components/common/ErrorMessage";
+import { resendConfirmationEmail } from "@/server/actions/auth";
 
-export default async function CheckEmailPage({ searchParams }: { searchParams: Promise<{ email?: string }> }) {
+export default async function CheckEmailPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ email?: string; error?: string; resent?: string }>;
+}) {
   const params = await searchParams;
 
   return (
@@ -19,9 +25,36 @@ export default async function CheckEmailPage({ searchParams }: { searchParams: P
             届いたメールのリンクを開くと、子どもプロフィール作成へ進めます。
           </p>
         </div>
-        <p className="rounded-2xl bg-blue-50 px-4 py-3 text-sm font-bold text-blue-700">
-          メールが見つからない場合は、迷惑メールフォルダも確認してください。
+
+        <ErrorMessage message={params.error} />
+        {params.resent ? (
+          <p className="rounded-2xl bg-green-50 px-4 py-3 text-sm font-bold text-green-700">
+            確認メールを再送しました。数分待ってから受信箱を確認してください。
+          </p>
+        ) : null}
+
+        <p className="rounded-2xl bg-blue-50 px-4 py-3 text-sm font-bold leading-6 text-blue-700">
+          メールが見つからない場合は、迷惑メールフォルダ、プロモーション、すべてのメールも確認してください。
         </p>
+
+        <form action={resendConfirmationEmail} className="grid gap-3 rounded-3xl border border-orange-100 bg-orange-50 p-4 text-left">
+          <label className="grid gap-2 text-sm font-bold text-gray-700">
+            確認メールを再送する
+            <input
+              name="email"
+              type="email"
+              defaultValue={params.email ?? ""}
+              placeholder="mail@example.com"
+              required
+              className="min-h-12 rounded-2xl border border-orange-100 bg-white px-4 text-base outline-none ring-orange-200 focus:ring-4"
+            />
+          </label>
+          <button className="inline-flex min-h-12 items-center justify-center gap-2 rounded-2xl bg-orange-500 px-4 py-3 font-black text-white">
+            <Send size={18} />
+            再送する
+          </button>
+        </form>
+
         <Button href="/login" variant="outline" className="w-full">
           確認後にログインする
         </Button>

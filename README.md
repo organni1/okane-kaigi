@@ -57,6 +57,7 @@ RLSは親ユーザーごとに`parent_user_id = auth.uid()`で分離します。
 3. Redirect URLsに以下を追加
    - `http://localhost:3000/**`
    - `http://localhost:3001/**`
+   - `http://127.0.0.1:3001/**`
    - `https://your-vercel-domain.vercel.app/**`
 4. Authentication > Email Templates > Confirm signupを開く
 5. 確認リンクをSSR向けに変更
@@ -69,6 +70,21 @@ RLSは親ユーザーごとに`parent_user_id = auth.uid()`で分離します。
 
 signup後は`/signup/check-email`に遷移します。確認メールのリンクを開くと`/auth/confirm`でsession cookieが作成され、`/setup/child`へ進みます。
 
+## 確認メールが届かない時のチェック
+
+1. Authentication > Usersで対象メールのユーザーが作成されているか確認する
+2. Logs > Auth Logsでsignup時刻付近のイベントを確認する
+   - `user_signedup`
+   - `user_confirmation_requested`
+   - `user_repeated_signup`
+   - rate limit / SMTP / mailer系エラー
+3. Authentication > Emails / SMTP Settingsを確認する
+4. Custom SMTP未設定の場合は、SupabaseのデフォルトSMTP制限に当たっていないか確認する
+5. Gmail側で迷惑メール、プロモーション、すべてのメールを検索する
+6. 同じメールで何度も試している場合は、少し待ってから`/signup/check-email`で再送する
+
+本番運用ではResend、SendGrid、Postmark、AWS SESなどのCustom SMTP設定を推奨します。
+
 ## Assets
 
 - Sample UI: `reference/sample-ui/`
@@ -79,16 +95,17 @@ signup後は`/signup/check-email`に遷移します。確認メールのリン�
 ## Smoke Test
 
 1. `/signup`で親アカウントを作成する
-2. 確認メールを開き、`/setup/child`へ進む
-3. `/setup/child`で子どもプロフィール、PIN、初期残高を作成する
-4. `/parent/dashboard`で子どもカードと残高が表示される
-5. 子ども画面を開き、PINで`/child/[childId]/home`に入る
-6. ほしいものを登録する
-7. 買う前チェックを送信し、相談結果画面で「親に相談中だよ」を確認する
-8. `/parent/consultations/[id]`で相談を確認し、コメントと判断を保存する
-9. 子どもの結果画面で親コメントと判断を見る
-10. `/parent/wallet`で残高を調整し、取引履歴を確認する
-11. OK後に親相談詳細から購入済みにして、残高が減ることを確認する
+2. `/signup/check-email`で確認メール案内と再送導線を確認する
+3. 確認メールを開き、`/setup/child`へ進む
+4. `/setup/child`で子どもプロフィール、PIN、初期残高を作成する
+5. `/parent/dashboard`で子どもカードと残高が表示される
+6. 子ども画面を開き、PINで`/child/[childId]/home`に入る
+7. ほしいものを登録する
+8. 買う前チェックを送信し、相談結果画面で「親に相談中だよ」を確認する
+9. `/parent/consultations/[id]`で相談を確認し、コメントと判断を保存する
+10. 子どもの結果画面で親コメントと判断を見る
+11. `/parent/wallet`で残高を調整し、取引履歴を確認する
+12. OK後に親相談詳細から購入済みにして、残高が減ることを確認する
 
 ## Vercel Deployment
 

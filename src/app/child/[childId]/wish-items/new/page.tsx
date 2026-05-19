@@ -5,8 +5,8 @@ import { redirect } from "next/navigation";
 import { Button } from "@/components/common/Button";
 import { ErrorMessage } from "@/components/common/ErrorMessage";
 import { Field } from "@/components/common/Field";
-import { PageHeader } from "@/components/layout/PageHeader";
 import { AppShell } from "@/components/layout/AppShell";
+import { PageHeader } from "@/components/layout/PageHeader";
 import { isChildModeVerified } from "@/lib/auth/childMode";
 import { CATEGORIES } from "@/lib/constants/categories";
 import { getSessionUser } from "@/lib/supabase/server";
@@ -19,7 +19,12 @@ export default async function NewWishItemPage({ params, searchParams }: { params
   if (!user) redirect("/login");
   if (!(await isChildModeVerified(childId))) redirect(`/child/${childId}/pin`);
 
-  const { data: child } = await supabase.from("child_profiles").select("id").eq("id", childId).eq("parent_user_id", user.id).single();
+  const { data: child } = await supabase
+    .from("child_profiles")
+    .select("id")
+    .eq("id", childId)
+    .eq("parent_user_id", user.id)
+    .maybeSingle();
   if (!child) redirect("/child/select");
 
   return (
@@ -56,9 +61,15 @@ export default async function NewWishItemPage({ params, searchParams }: { params
         <section className="soft-card grid gap-4 rounded-3xl p-5">
           <h2 className="text-lg font-black">どれくらいほしい？</h2>
           <select name="desire_level" defaultValue="4" className="min-h-12 rounded-2xl border border-orange-100 bg-white p-3">
-            {[1, 2, 3, 4, 5].map((level) => <option key={level} value={level}>{"★".repeat(level)}</option>)}
+            {[1, 2, 3, 4, 5].map((level) => (
+              <option key={level} value={level}>
+                {"★".repeat(level)}
+              </option>
+            ))}
           </select>
-          <Button type="submit" className="w-full text-xl">次へ</Button>
+          <Button type="submit" className="w-full text-xl">
+            次へ
+          </Button>
         </section>
       </form>
     </AppShell>

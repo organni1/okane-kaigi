@@ -19,7 +19,7 @@ export default async function ChildPinPage({ params, searchParams }: { params: P
     .select("*")
     .eq("id", childId)
     .eq("parent_user_id", user.id)
-    .single();
+    .maybeSingle();
   if (!child) redirect("/child/select");
 
   const action = verifyChildPin.bind(null, childId);
@@ -41,7 +41,9 @@ export default async function ChildPinPage({ params, searchParams }: { params: P
           required
           className="mx-auto min-h-16 w-44 rounded-3xl border border-orange-100 bg-white text-center text-4xl font-black tracking-[0.35em] outline-none ring-orange-200 focus:ring-4"
         />
-        <Button type="submit" className="w-full">開く</Button>
+        <Button type="submit" className="w-full">
+          開く
+        </Button>
       </form>
     </AppShell>
   );

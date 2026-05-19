@@ -2,16 +2,42 @@ export const dynamic = "force-dynamic";
 
 import Image from "next/image";
 import { redirect } from "next/navigation";
-import { PageHeader } from "@/components/layout/PageHeader";
-import { ParentShell } from "@/components/layout/ParentShell";
-import { ConversationGuideCard } from "@/components/parent/ConversationGuideCard";
-import { ConsultationDecisionForm } from "@/components/parent/ConsultationDecisionForm";
 import { ErrorMessage } from "@/components/common/ErrorMessage";
 import { StatusBadge } from "@/components/common/StatusBadge";
+import { PageHeader } from "@/components/layout/PageHeader";
+import { ParentShell } from "@/components/layout/ParentShell";
+import { ConsultationDecisionForm } from "@/components/parent/ConsultationDecisionForm";
+import { ConversationGuideCard } from "@/components/parent/ConversationGuideCard";
 import { categoryImage, categoryLabel } from "@/lib/constants/categories";
 import { getSessionUser } from "@/lib/supabase/server";
 import { formatCurrency } from "@/lib/utils/formatCurrency";
 import { markWishItemPurchased } from "@/server/actions/wallet";
+import type { ChildProfile, PrePurchaseCheck, WishItem } from "@/types/database";
+
+type ConsultationDetail = {
+  id: string;
+  child_profile_id: string;
+  wish_items: WishItem | WishItem[] | null;
+  child_profiles: ChildProfile | ChildProfile[] | null;
+  pre_purchase_checks: PrePurchaseCheck | PrePurchaseCheck[] | null;
+};
+
+function firstOrNull<T>(value: T | T[] | null | undefined) {
+  return Array.isArray(value) ? (value[0] ?? null) : (value ?? null);
+}
+
+function needOrWantLabel(value?: string | null) {
+  if (value === "need") return "必要なもの";
+  if (value === "want") return "ほしいもの";
+  return "まだ分からない";
+}
+
+function expectedUsageLabel(value?: string | null) {
+  if (value === "often") return "よく使う";
+  if (value === "sometimes") return "ときどき使う";
+  if (value === "rarely") return "あまり使わない";
+  return "未入力";
+}
 
 export default async function ConsultationDetailPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ error?: string; saved?: string }> }) {
   const { id } = await params;
@@ -24,18 +50,21 @@ export default async function ConsultationDetailPage({ params, searchParams }: {
     .select("*, child_profiles(*), wish_items(*), pre_purchase_checks(*)")
     .eq("id", id)
     .eq("parent_user_id", user.id)
-    .single();
-  if (!consultation) redirect("/parent/consultations");
+    .maybeSingle();
+  if (!consultation) redirect("/parent/consultations?error=相談が見つかりません");
 
-  const item = consultation.wish_items;
-  const child = consultation.child_profiles;
-  const check = Array.isArray(consultation.pre_purchase_checks) ? consultation.pre_purchase_checks[0] : consultation.pre_purchase_checks;
-  const { data: wallet } = await supabase.from("wallets").select("*").eq("child_profile_id", consultation.child_profile_id).single();
+  const detail = consultation as ConsultationDetail;
+  const item = firstOrNull(detail.wish_items);
+  const child = firstOrNull(detail.child_profiles);
+  const check = firstOrNull(detail.pre_purchase_checks);
+  if (!item || !child) redirect("/parent/consultations?error=相談に必要なデータが見つかりません");
+
+  const { data: wallet } = await supabase.from("wallets").select("*").eq("child_profile_id", detail.child_profile_id).eq("parent_user_id", user.id).maybeSingle();
   const { data: guide } = await supabase
     .from("conversation_guides")
     .select("*")
     .eq("is_active", true)
-    .or(`category.eq.${item?.category ?? "other"},category.is.null`)
+    .or(`category.eq.${item.category ?? "other"},category.is.null`)
     .order("sort_order")
     .limit(1)
     .maybeSingle();
@@ -48,38 +77,44 @@ export default async function ConsultationDetailPage({ params, searchParams }: {
         {query.saved ? <p className="rounded-2xl bg-green-50 px-4 py-3 font-bold text-green-700">保存しました</p> : null}
         <p className="flex items-center gap-3 text-xl font-black">
           <Image src="/assets/images/mascot-shiba-normal.png" alt="" width={56} height={56} className="rounded-full bg-yellow-50" />
-          {child?.nickname}さんの相談
+          {child.nickname}さんの相談
         </p>
         <section className="soft-card grid gap-4 rounded-[2rem] p-5">
           <div className="grid grid-cols-[110px_1fr] gap-4">
-            <Image src={categoryImage(item?.category)} alt="" width={110} height={110} className="rounded-full bg-blue-50 p-3" />
+            <Image src={categoryImage(item.category)} alt="" width={110} height={110} className="rounded-full bg-blue-50 p-3" />
             <div>
-              <h1 className="text-3xl font-black">{item?.title}</h1>
-              <p className="text-4xl font-black">{formatCurrency(item?.price)}</p>
-              <p className="font-bold text-gray-600">カテゴリ: {categoryLabel(item?.category)}</p>
-              <p className="font-bold text-gray-600">理由: {item?.reason || "未入力"}</p>
+              <h1 className="text-3xl font-black">{item.title}</h1>
+              <p className="text-4xl font-black">{formatCurrency(item.price)}</p>
+              <p className="font-bold text-gray-600">カテゴリ: {categoryLabel(item.category)}</p>
+              <p className="font-bold text-gray-600">理由: {item.reason || "未入力"}</p>
             </div>
           </div>
           <div className="grid grid-cols-[1fr_auto_1fr] items-center rounded-3xl bg-orange-50 p-4 text-center">
-            <div><p className="font-bold text-gray-500">今あるお金</p><p className="text-3xl font-black">{formatCurrency(wallet?.balance)}</p></div>
+            <div>
+              <p className="font-bold text-gray-500">今あるお金</p>
+              <p className="text-3xl font-black">{formatCurrency(wallet?.balance)}</p>
+            </div>
             <span className="text-3xl font-black text-orange-500">→</span>
-            <div><p className="font-bold text-gray-500">買った後</p><p className="text-3xl font-black">{formatCurrency(check?.remaining_balance_after_purchase)}</p></div>
+            <div>
+              <p className="font-bold text-gray-500">買った後</p>
+              <p className="text-3xl font-black">{formatCurrency(check?.remaining_balance_after_purchase)}</p>
+            </div>
           </div>
-          <StatusBadge status={item?.status ?? "consulting"} />
+          <StatusBadge status={item.status ?? "consulting"} />
         </section>
         <section className="soft-card rounded-3xl p-5">
           <h2 className="mb-3 text-xl font-black">買う前チェック</h2>
           <div className="grid gap-2 font-bold">
-            <p>どっち？: {check?.need_or_want === "need" ? "必要なもの" : check?.need_or_want === "want" ? "ほしいもの" : "まだ分からない"}</p>
+            <p>これはどっち？: {needOrWantLabel(check?.need_or_want)}</p>
             <p>理由: {check?.reason_text || "未入力"}</p>
             <p>似たもの: {check?.already_have_similar ? "持っている" : "持っていない"}</p>
-            <p>使いそう？: {check?.expected_usage || "未入力"}</p>
+            <p>使いそう？: {expectedUsageLabel(check?.expected_usage)}</p>
           </div>
         </section>
         <ConversationGuideCard guide={guide} />
-        {item?.status === "approved" ? (
+        {item.status === "approved" ? (
           <form action={markWishItemPurchased} className="soft-card grid gap-3 rounded-3xl p-5">
-            <input type="hidden" name="consultation_id" value={consultation.id} />
+            <input type="hidden" name="consultation_id" value={detail.id} />
             <input type="hidden" name="wish_item_id" value={item.id} />
             <p className="font-bold text-gray-600">購入したら、子どもの今あるお金から金額を引いて「買ったもの」にできます。</p>
             <button className="min-h-12 rounded-2xl bg-blue-600 px-4 py-3 text-lg font-black text-white">
@@ -87,7 +122,7 @@ export default async function ConsultationDetailPage({ params, searchParams }: {
             </button>
           </form>
         ) : null}
-        <ConsultationDecisionForm consultationId={consultation.id} />
+        <ConsultationDecisionForm consultationId={detail.id} />
       </div>
     </ParentShell>
   );

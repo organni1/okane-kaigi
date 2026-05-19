@@ -14,12 +14,7 @@ export function ConsultationDecisionForm({ consultationId }: { consultationId: s
         />
       </label>
       {DECISIONS.map((decision) => (
-        <button
-          key={decision.value}
-          name="parent_decision"
-          value={decision.value}
-          className={`min-h-12 rounded-2xl border px-4 py-3 text-lg font-black ${decision.tone}`}
-        >
+        <button key={decision.value} name="parent_decision" value={decision.value} className={`min-h-12 rounded-2xl border px-4 py-3 text-lg font-black ${decision.tone}`}>
           {decision.label}
         </button>
       ))}

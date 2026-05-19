@@ -30,7 +30,7 @@ export async function createWishItem(formData: FormData) {
     .single();
 
   if (error || !data) {
-    redirect(`/child/${parsed.data.child_profile_id}/wish-items/new?error=${encodeURIComponent(error?.message ?? "登録に失敗しました")}`);
+    redirect(`/child/${parsed.data.child_profile_id}/wish-items/new?error=${encodeURIComponent("ほしいものの登録に失敗しました。入力内容を確認して再度お試しください。")}`);
   }
 
   redirect(`/child/${parsed.data.child_profile_id}/wish-items/${data.id}/check`);

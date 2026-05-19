@@ -16,9 +16,16 @@ export default async function CheckPage({ params, searchParams }: { params: Prom
   if (!user) redirect("/login");
   if (!(await isChildModeVerified(childId))) redirect(`/child/${childId}/pin`);
 
-  const { data: item } = await supabase.from("wish_items").select("*").eq("id", id).eq("child_profile_id", childId).eq("parent_user_id", user.id).single();
+  const { data: item } = await supabase
+    .from("wish_items")
+    .select("*")
+    .eq("id", id)
+    .eq("child_profile_id", childId)
+    .eq("parent_user_id", user.id)
+    .maybeSingle();
   if (!item) redirect(`/child/${childId}/wish-items`);
-  const { data: wallet } = await supabase.from("wallets").select("*").eq("child_profile_id", childId).single();
+
+  const { data: wallet } = await supabase.from("wallets").select("*").eq("child_profile_id", childId).eq("parent_user_id", user.id).maybeSingle();
 
   return (
     <AppShell>

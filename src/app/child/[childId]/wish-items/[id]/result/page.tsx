@@ -16,8 +16,15 @@ export default async function ResultPage({ params }: { params: Promise<{ childId
   if (!user) redirect("/login");
   if (!(await isChildModeVerified(childId))) redirect(`/child/${childId}/pin`);
 
-  const { data: item } = await supabase.from("wish_items").select("*").eq("id", id).eq("child_profile_id", childId).eq("parent_user_id", user.id).single();
+  const { data: item } = await supabase
+    .from("wish_items")
+    .select("*")
+    .eq("id", id)
+    .eq("child_profile_id", childId)
+    .eq("parent_user_id", user.id)
+    .maybeSingle();
   if (!item) redirect(`/child/${childId}/wish-items`);
+
   const { data: consultation } = await supabase
     .from("consultations")
     .select("*")
@@ -38,7 +45,10 @@ export default async function ResultPage({ params }: { params: Promise<{ childId
             <h1 className="text-3xl font-black">{item.title}</h1>
             <p className="mt-2 inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-sm font-bold text-gray-500 shadow-sm">
               <Clock size={18} />
-              相談した日: {consultation ? new Date(consultation.created_at).toLocaleString("ja-JP", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }) : "相談中"}
+              相談した日:{" "}
+              {consultation
+                ? new Date(consultation.created_at).toLocaleString("ja-JP", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })
+                : "相談中"}
             </p>
           </div>
         </section>

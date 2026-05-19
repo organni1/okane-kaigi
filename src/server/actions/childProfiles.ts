@@ -28,7 +28,7 @@ export async function createChildProfileWithWallet(formData: FormData) {
     .select("*")
     .single();
 
-  if (childError || !child) redirect(`/setup/child?error=${encodeURIComponent(childError?.message ?? "作成に失敗しました")}`);
+  if (childError || !child) redirect(`/setup/child?error=${encodeURIComponent("子どもプロフィールの作成に失敗しました。少し時間をおいて再度お試しください。")}`);
 
   const { data: wallet, error: walletError } = await supabase
     .from("wallets")
@@ -36,7 +36,7 @@ export async function createChildProfileWithWallet(formData: FormData) {
     .select("*")
     .single();
 
-  if (walletError || !wallet) redirect(`/setup/child?error=${encodeURIComponent(walletError?.message ?? "wallet作成に失敗しました")}`);
+  if (walletError || !wallet) redirect(`/setup/child?error=${encodeURIComponent("walletの作成に失敗しました。子どもプロフィールを確認してください。")}`);
 
   if (parsed.data.initial_balance > 0) {
     await supabase.from("wallet_transactions").insert({
@@ -75,9 +75,10 @@ export async function verifyChildPin(childId: string, formData: FormData) {
     .select("id,pin_hash")
     .eq("id", childId)
     .eq("parent_user_id", user.id)
-    .single();
+    .maybeSingle();
 
-  if (!child?.pin_hash) redirect(`/child/${childId}/pin?error=${encodeURIComponent("PINが設定されていません")}`);
+  if (!child) redirect("/child/select");
+  if (!child.pin_hash) redirect(`/child/${childId}/pin?error=${encodeURIComponent("PINが設定されていません")}`);
 
   const ok = await bcrypt.compare(parsed.data.pin, child.pin_hash);
   if (!ok) redirect(`/child/${childId}/pin?error=${encodeURIComponent("PINが違います")}`);

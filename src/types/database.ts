@@ -15,7 +15,7 @@ export type ParentProfile = RowBase & {
 export type ChildProfile = RowBase & {
   parent_user_id: string;
   nickname: string;
-  age_group: "age_6_8" | "age_9_12" | "other";
+  age_group: "age_3_5" | "age_6_8" | "age_9_12" | "age_12_15" | "other";
   avatar_id: string | null;
   pin_hash: string | null;
   currency_label: "円" | "ポイント";

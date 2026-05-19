@@ -6,14 +6,30 @@ import { markChildModeVerified } from "@/lib/auth/childMode";
 import { getSessionUser } from "@/lib/supabase/server";
 import { childProfileSchema, pinSchema } from "@/lib/validations/child";
 
+function firstValidationMessage(error: { issues: { message: string }[] }) {
+  return error.issues[0]?.message ?? "入力内容を確認してください";
+}
+
+function setupChildRedirect(formData: FormData, error: string): never {
+  const params = new URLSearchParams({
+    error,
+    nickname: String(formData.get("nickname") ?? ""),
+    age_group: String(formData.get("age_group") ?? "age_6_8"),
+    currency_label: String(formData.get("currency_label") ?? "円"),
+    initial_balance: String(formData.get("initial_balance") ?? "0"),
+  });
+
+  redirect(`/setup/child?${params.toString()}`);
+}
+
 export async function createChildProfileWithWallet(formData: FormData) {
   const { supabase, user } = await getSessionUser();
   if (!user) redirect("/login");
 
   const parsed = childProfileSchema.safeParse(Object.fromEntries(formData));
-  if (!parsed.success) redirect(`/setup/child?error=${encodeURIComponent("入力内容を確認してください")}`);
+  if (!parsed.success) setupChildRedirect(formData, firstValidationMessage(parsed.error));
 
-  const pinHash = await bcrypt.hash(parsed.data.pin, 10);
+  const pinHash = parsed.data.pin ? await bcrypt.hash(parsed.data.pin, 10) : null;
   const { data: child, error: childError } = await supabase
     .from("child_profiles")
     .insert({
@@ -28,7 +44,9 @@ export async function createChildProfileWithWallet(formData: FormData) {
     .select("*")
     .single();
 
-  if (childError || !child) redirect(`/setup/child?error=${encodeURIComponent("子どもプロフィールの作成に失敗しました。少し時間をおいて再度お試しください。")}`);
+  if (childError || !child) {
+    setupChildRedirect(formData, "子どもプロフィールの作成に失敗しました。少し時間をおいて再度お試しください。");
+  }
 
   const { data: wallet, error: walletError } = await supabase
     .from("wallets")
@@ -36,7 +54,9 @@ export async function createChildProfileWithWallet(formData: FormData) {
     .select("*")
     .single();
 
-  if (walletError || !wallet) redirect(`/setup/child?error=${encodeURIComponent("walletの作成に失敗しました。子どもプロフィールを確認してください。")}`);
+  if (walletError || !wallet) {
+    setupChildRedirect(formData, "walletの作成に失敗しました。子どもプロフィールを確認してください。");
+  }
 
   if (parsed.data.initial_balance > 0) {
     await supabase.from("wallet_transactions").insert({
@@ -68,7 +88,7 @@ export async function verifyChildPin(childId: string, formData: FormData) {
   if (!user) redirect("/login");
 
   const parsed = pinSchema.safeParse(Object.fromEntries(formData));
-  if (!parsed.success) redirect(`/child/${childId}/pin?error=${encodeURIComponent("PINは4桁の数字です")}`);
+  if (!parsed.success) redirect(`/child/${childId}/pin?error=${encodeURIComponent(firstValidationMessage(parsed.error))}`);
 
   const { data: child } = await supabase
     .from("child_profiles")
@@ -78,7 +98,7 @@ export async function verifyChildPin(childId: string, formData: FormData) {
     .maybeSingle();
 
   if (!child) redirect("/child/select");
-  if (!child.pin_hash) redirect(`/child/${childId}/pin?error=${encodeURIComponent("PINが設定されていません")}`);
+  if (!child.pin_hash) redirect(`/child/${childId}/home`);
 
   const ok = await bcrypt.compare(parsed.data.pin, child.pin_hash);
   if (!ok) redirect(`/child/${childId}/pin?error=${encodeURIComponent("PINが違います")}`);

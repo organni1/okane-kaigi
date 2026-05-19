@@ -57,7 +57,7 @@ export default async function CheckEmailPage({
           </form>
         ) : (
           <p className="rounded-2xl bg-orange-50 px-4 py-3 text-sm font-bold leading-6 text-gray-600">
-            再送するメールアドレスが分かりません。メールアドレスを変えたい場合は、登録画面からやり直してください。
+            再送するメールアドレスが分かりません。メールアドレスを入力してから、ログイン画面または登録画面の導線を使ってください。
           </p>
         )}
 

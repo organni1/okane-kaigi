@@ -8,7 +8,13 @@ import { AppShell } from "@/components/layout/AppShell";
 import { getSessionUser } from "@/lib/supabase/server";
 import { verifyChildPin } from "@/server/actions/childProfiles";
 
-export default async function ChildPinPage({ params, searchParams }: { params: Promise<{ childId: string }>; searchParams: Promise<{ error?: string }> }) {
+export default async function ChildPinPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ childId: string }>;
+  searchParams: Promise<{ error?: string }>;
+}) {
   const { childId } = await params;
   const query = await searchParams;
   const { supabase, user } = await getSessionUser();
@@ -21,6 +27,7 @@ export default async function ChildPinPage({ params, searchParams }: { params: P
     .eq("parent_user_id", user.id)
     .maybeSingle();
   if (!child) redirect("/child/select");
+  if (!child.pin_hash) redirect(`/child/${childId}/home`);
 
   const action = verifyChildPin.bind(null, childId);
 
@@ -35,6 +42,7 @@ export default async function ChildPinPage({ params, searchParams }: { params: P
         <ErrorMessage message={query.error} />
         <input
           name="pin"
+          type="password"
           inputMode="numeric"
           pattern="[0-9]{4}"
           maxLength={4}

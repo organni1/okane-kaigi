@@ -1,4 +1,5 @@
 import { cookies } from "next/headers";
+import { createClient } from "@/lib/supabase/server";
 
 const cookieName = (childId: string) => `okane_child_${childId}`;
 
@@ -15,5 +16,20 @@ export async function markChildModeVerified(childId: string) {
 
 export async function isChildModeVerified(childId: string) {
   const cookieStore = await cookies();
-  return cookieStore.get(cookieName(childId))?.value === "verified";
+  if (cookieStore.get(cookieName(childId))?.value === "verified") return true;
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return false;
+
+  const { data: child } = await supabase
+    .from("child_profiles")
+    .select("pin_hash")
+    .eq("id", childId)
+    .eq("parent_user_id", user.id)
+    .maybeSingle();
+
+  return child?.pin_hash === null;
 }

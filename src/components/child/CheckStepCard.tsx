@@ -15,33 +15,35 @@ export function CheckStepCard({ item, wallet, childId }: { item: WishItem; walle
       <h2 className="text-center text-4xl font-black">これはどっち?</h2>
       <div className="grid gap-3">
         <label className="rounded-3xl border border-green-200 bg-green-50 p-4 text-xl font-black">
-          <input className="mr-3" type="radio" name="need_or_want" value="need" required /> 必要なもの
+          <input className="mr-3" type="radio" name="need_or_want" value="need" required /> いるもの
         </label>
         <label className="rounded-3xl border border-orange-200 bg-orange-50 p-4 text-xl font-black">
           <input className="mr-3" type="radio" name="need_or_want" value="want" required /> ほしいもの
         </label>
         <label className="rounded-3xl border border-blue-200 bg-blue-50 p-4 text-xl font-black">
-          <input className="mr-3" type="radio" name="need_or_want" value="unsure" required /> まだ分からない
+          <input className="mr-3" type="radio" name="need_or_want" value="unsure" required /> まだわからない
         </label>
       </div>
       <textarea name="reason_text" placeholder="どうしてほしい？" className="min-h-24 rounded-2xl border border-orange-100 p-4" />
       <select name="already_have_similar" className="min-h-12 rounded-2xl border border-orange-100 p-3">
-        <option value="false">似たものは持っていない</option>
-        <option value="true">似たものを持っている</option>
+        <option value="false">にたものはもっていない</option>
+        <option value="true">にたものをもっている</option>
       </select>
       <select name="wait_choice" className="min-h-12 rounded-2xl border border-orange-100 p-3" defaultValue="wait_1_day">
         <option value="wait_now">今すぐほしい</option>
-        <option value="wait_1_day">1日待って考える</option>
-        <option value="wait_1_week">1週間待って考える</option>
+        <option value="wait_1_day">1日まって考える</option>
+        <option value="wait_1_week">1週間まって考える</option>
       </select>
       <select name="expected_usage" className="min-h-12 rounded-2xl border border-orange-100 p-3" defaultValue="often">
         <option value="often">よく使う</option>
         <option value="sometimes">ときどき使う</option>
         <option value="rarely">あまり使わない</option>
-        <option value="unknown">まだ分からない</option>
+        <option value="unknown">まだわからない</option>
       </select>
       <input type="hidden" name="child_payment_ratio" value="100" />
-      <Button type="submit" className="w-full text-xl">親に相談する</Button>
+      <Button type="submit" className="w-full text-xl">
+        おとうさん・おかあさんに相談する
+      </Button>
     </form>
   );
 }

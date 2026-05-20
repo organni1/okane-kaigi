@@ -21,6 +21,7 @@ export async function createWishItem(formData: FormData) {
       title: parsed.data.title,
       price: parsed.data.price,
       category: parsed.data.category,
+      category_note: parsed.data.category_note,
       reason: parsed.data.reason,
       found_place: parsed.data.found_place,
       desire_level: parsed.data.desire_level,

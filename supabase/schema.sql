@@ -13,7 +13,7 @@ create table if not exists public.child_profiles (
   id uuid primary key default gen_random_uuid(),
   parent_user_id uuid not null references auth.users(id) on delete cascade,
   nickname text not null check (char_length(nickname) <= 30),
-  age_group text not null check (age_group in ('age_6_8','age_9_12','other')),
+  age_group text not null check (age_group in ('age_3_5','age_6_8','age_9_12','age_12_15','other')),
   avatar_id text,
   pin_hash text,
   currency_label text not null default '円' check (currency_label in ('円','ポイント')),
@@ -38,6 +38,7 @@ create table if not exists public.wish_items (
   title text not null check (char_length(title) <= 50),
   price numeric(12,2) not null check (price >= 0),
   category text not null,
+  category_note text check (char_length(category_note) <= 100),
   reason text check (char_length(reason) <= 200),
   found_place text,
   priority integer check (priority between 1 and 5),
@@ -165,6 +166,16 @@ create policy "own wish items" on public.wish_items for all using (parent_user_i
 create policy "own pre purchase checks" on public.pre_purchase_checks for all using (parent_user_id = auth.uid()) with check (parent_user_id = auth.uid());
 create policy "own consultations" on public.consultations for all using (parent_user_id = auth.uid()) with check (parent_user_id = auth.uid());
 create policy "active guides readable" on public.conversation_guides for select using (auth.uid() is not null and is_active = true);
+
+alter table public.child_profiles drop constraint if exists child_profiles_age_group_check;
+alter table public.child_profiles add constraint child_profiles_age_group_check
+  check (age_group in ('age_3_5','age_6_8','age_9_12','age_12_15','other'));
+
+alter table public.child_profiles drop constraint if exists child_profiles_currency_label_check;
+alter table public.child_profiles add constraint child_profiles_currency_label_check
+  check (currency_label in ('円','ポイント'));
+
+alter table public.wish_items add column if not exists category_note text;
 
 insert into public.conversation_guides (trigger_type, category, age_group, title, ng_example, recommended_example, question_examples, sort_order)
 values

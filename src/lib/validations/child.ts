@@ -4,7 +4,7 @@ const optionalPinSchema = z
   .string()
   .optional()
   .transform((value) => value?.trim() ?? "")
-  .refine((value) => value === "" || /^\d{4}$/.test(value), "PINは入力する場合、4桁の数字にしてください");
+  .refine((value) => value === "" || /^\d{4}$/.test(value), "PINは入力する場合、4けたの数字にしてください");
 
 export const childProfileSchema = z.object({
   nickname: z.string().min(1, "ニックネームを入力してください").max(30, "ニックネームは30文字以内で入力してください"),
@@ -22,5 +22,5 @@ export const childProfileSchema = z.object({
 });
 
 export const pinSchema = z.object({
-  pin: z.string().regex(/^\d{4}$/, "PINは4桁の数字です"),
+  pin: z.string().regex(/^\d{4}$/, "PINは4けたの数字です"),
 });

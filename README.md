@@ -33,6 +33,16 @@ SUPABASE_SERVICE_ROLE_KEY=
 
 Supabase SQL Editorで [supabase/schema.sql](supabase/schema.sql) を実行します。SQL Editorは100行以上のSQLも実行できます。構文エラーが出た場合は、貼り付け時に行が欠けていないか、途中の `create table` 文が切れていないかを確認してください。
 
+既存DBに対して今回追加した制約・カラムだけを先に反映したい場合は、以下をSQL Editorで実行してください。
+
+```sql
+alter table public.child_profiles drop constraint if exists child_profiles_age_group_check;
+alter table public.child_profiles add constraint child_profiles_age_group_check
+  check (age_group in ('age_3_5','age_6_8','age_9_12','age_12_15','other'));
+
+alter table public.wish_items add column if not exists category_note text;
+```
+
 作成されるテーブル:
 
 - `parent_profiles`
@@ -83,7 +93,7 @@ signup後は `/signup/check-email?email=...` に遷移します。確認メー�
 5. Gmail側で迷惑メール、プロモーション、すべてのメールを検索する
 6. 同じメールで何度も試している場合は、少し待ってから再送する
 
-再送は、`/signup/check-email?email=...` の固定表示されたメール宛に行います。再送画面でメールアドレスを直接入力させるUIはありません。`/login` から再送画面へ進む場合は、先にログイン画面のメール欄へ対象メールを入力してください。
+再送は、`/signup/check-email?email=...` の固定表示されたメール宛に行います。ログイン画面から直接メール再送させるUIは置いていません。
 
 本番運用ではResend、SendGrid、Postmark、AWS SESなどのCustom SMTP設定を推奨します。
 
@@ -104,10 +114,13 @@ signup後は `/signup/check-email?email=...` に遷移します。確認メー�
 2. `/signup/check-email?email=...` で確認メール案内と再送導線を確認する
 3. 確認メールを開き、`/setup/child` へ進む
 4. 子どもプロフィール、任意のPIN、初期残高を作成する
-5. Child Modeでほしいものを登録し、買う前チェックを送る
-6. Parent Modeで相談にコメントと判断を返す
-7. 子どもが相談結果を見る
-8. walletの追加、減算、購入済み処理を確認する
+5. 必要に応じて `作成してもうひとり追加` で複数の子どもを作成する
+6. Parent Modeで複数子どもの残高と子ども画面導線を確認する
+7. Child Modeでほしいものを登録し、買う前チェックを送る
+8. ほしいもの登録でカテゴリ補足、ほしい度、所持金超過警告を確認する
+9. Parent Modeで相談にコメントと判断を返す
+10. 子どもが相談結果を見る
+11. walletの追加、減少、購入済み処理を確認する
 
 ## Vercel Deployment
 

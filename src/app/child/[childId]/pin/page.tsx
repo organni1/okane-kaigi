@@ -4,6 +4,7 @@ import Image from "next/image";
 import { redirect } from "next/navigation";
 import { Button } from "@/components/common/Button";
 import { ErrorMessage } from "@/components/common/ErrorMessage";
+import { NumericPinInput } from "@/components/common/NumericPinInput";
 import { AppShell } from "@/components/layout/AppShell";
 import { getSessionUser } from "@/lib/supabase/server";
 import { verifyChildPin } from "@/server/actions/childProfiles";
@@ -40,12 +41,8 @@ export default async function ChildPinPage({
           <p className="mt-2 font-bold text-gray-500">4けたのPINを入れてね</p>
         </div>
         <ErrorMessage message={query.error} />
-        <input
+        <NumericPinInput
           name="pin"
-          type="password"
-          inputMode="numeric"
-          pattern="[0-9]{4}"
-          maxLength={4}
           required
           className="mx-auto min-h-16 w-44 rounded-3xl border border-orange-100 bg-white text-center text-4xl font-black tracking-[0.35em] outline-none ring-orange-200 focus:ring-4"
         />

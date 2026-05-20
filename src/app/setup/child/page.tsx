@@ -1,9 +1,10 @@
 export const dynamic = "force-dynamic";
 
 import Image from "next/image";
+import { Plus, Save } from "lucide-react";
 import { redirect } from "next/navigation";
-import { Button } from "@/components/common/Button";
 import { ErrorMessage } from "@/components/common/ErrorMessage";
+import { NumericPinInput } from "@/components/common/NumericPinInput";
 import { AppShell } from "@/components/layout/AppShell";
 import { getSessionUser } from "@/lib/supabase/server";
 import { createChildProfileWithWallet } from "@/server/actions/childProfiles";
@@ -21,6 +22,7 @@ export default async function SetupChildPage({
 }: {
   searchParams: Promise<{
     error?: string;
+    created?: string;
     nickname?: string;
     age_group?: string;
     currency_label?: string;
@@ -44,6 +46,11 @@ export default async function SetupChildPage({
           <p className="mt-2 text-sm font-bold text-gray-500">本名ではなく、呼びやすいニックネームで登録します。</p>
         </div>
 
+        {params.created ? (
+          <p className="rounded-2xl bg-green-50 px-4 py-3 text-sm font-bold leading-6 text-green-700">
+            子どもプロフィールを作成しました。続けてもうひとり登録できます。
+          </p>
+        ) : null}
         <ErrorMessage message={params.error} />
 
         <label className="grid gap-2 text-sm font-bold text-gray-800">
@@ -103,21 +110,34 @@ export default async function SetupChildPage({
 
         <label className="grid gap-2 text-sm font-bold text-gray-800">
           子ども用PIN（任意）
-          <input
+          <NumericPinInput
             name="pin"
-            type="password"
-            inputMode="numeric"
-            pattern="[0-9]{4}"
-            maxLength={4}
             placeholder="1234"
             className="min-h-12 rounded-2xl border border-orange-100 bg-white px-4 text-base outline-none ring-orange-200 focus:ring-4"
           />
-          <span className="text-xs leading-5 text-gray-500">設定する場合は4桁の数字だけ入力できます。未入力でも作成できます。</span>
+          <span className="text-xs leading-5 text-gray-500">設定する場合は4けたの数字だけ入力できます。未入力でも作成できます。</span>
         </label>
 
-        <Button type="submit" className="w-full">
-          作成する
-        </Button>
+        <div className="grid gap-3">
+          <button
+            type="submit"
+            name="next_action"
+            value="dashboard"
+            className="inline-flex min-h-12 items-center justify-center gap-2 rounded-2xl bg-orange-500 px-5 py-3 text-base font-bold text-white shadow-lg shadow-orange-200 transition hover:bg-orange-600"
+          >
+            <Save size={18} />
+            作成してダッシュボードへ
+          </button>
+          <button
+            type="submit"
+            name="next_action"
+            value="add_another"
+            className="inline-flex min-h-12 items-center justify-center gap-2 rounded-2xl border border-orange-300 bg-white px-5 py-3 text-base font-bold text-orange-600 transition hover:bg-orange-50"
+          >
+            <Plus size={18} />
+            作成してもうひとり追加
+          </button>
+        </div>
       </form>
     </AppShell>
   );

@@ -48,6 +48,7 @@ export type WishItem = RowBase & {
   title: string;
   price: number;
   category: string;
+  category_note: string | null;
   reason: string | null;
   found_place: string | null;
   priority: number | null;

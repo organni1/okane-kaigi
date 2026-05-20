@@ -37,13 +37,12 @@ export default function Home() {
       </section>
       <section className="mt-8 grid gap-4">
         {values.map((value) => (
-          <article key={value.title} className="soft-card grid grid-cols-[84px_1fr_auto] items-center gap-4 rounded-3xl p-4">
+          <article key={value.title} className="soft-card grid grid-cols-[84px_1fr] items-center gap-4 rounded-3xl p-4">
             <Image src={value.image} alt="" width={84} height={84} className="rounded-full bg-yellow-50 p-2" />
             <div>
               <h2 className="text-xl font-black">{value.title}</h2>
               <p className="text-sm font-bold leading-6 text-gray-600">{value.body}</p>
             </div>
-            <ChevronRight className="text-gray-400" />
           </article>
         ))}
       </section>

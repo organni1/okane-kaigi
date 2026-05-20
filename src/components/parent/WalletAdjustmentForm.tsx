@@ -20,7 +20,7 @@ export function WalletAdjustmentForm({ childrenList, wallets }: { childrenList: 
                 </div>
                 <p className="text-2xl font-black">{wallet ? formatCurrency(wallet.balance, child.currency_label) : "未作成"}</p>
               </div>
-              {!wallet ? <p className="mt-2 text-sm font-bold text-red-600">walletが見つかりません。子どもプロフィール作成をやり直してください。</p> : null}
+              {!wallet ? <p className="mt-2 text-sm font-bold text-red-600">お金の入れものが見つかりません。子どもプロフィール作成をやり直してください。</p> : null}
             </div>
           );
         })}
@@ -40,7 +40,7 @@ export function WalletAdjustmentForm({ childrenList, wallets }: { childrenList: 
           調整方法
           <select name="transaction_type" className="min-h-12 rounded-2xl border border-orange-100 p-3" defaultValue="income">
             <option value="income">追加する</option>
-            <option value="spending">減らす</option>
+            <option value="spending">減少する</option>
             <option value="refund">返す</option>
           </select>
         </label>

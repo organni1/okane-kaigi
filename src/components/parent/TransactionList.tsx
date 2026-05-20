@@ -3,7 +3,7 @@ import type { WalletTransaction } from "@/types/database";
 
 const typeLabels: Record<string, string> = {
   income: "追加",
-  spending: "減算",
+  spending: "減少",
   adjustment: "調整",
   refund: "返金",
 };

@@ -17,8 +17,7 @@ export function SignupForm({ email = "", error }: Props) {
   const [passwordConfirmation, setPasswordConfirmation] = useState("");
   const [agreed, setAgreed] = useState(false);
 
-  const canSubmit =
-    emailValue.trim().length > 0 && password.length > 0 && passwordConfirmation.length > 0 && agreed;
+  const canSubmit = emailValue.trim().length > 0 && password.length > 0 && passwordConfirmation.length > 0 && agreed;
 
   return (
     <form action={signUpAction} className="soft-card grid gap-5 rounded-[2rem] p-6">

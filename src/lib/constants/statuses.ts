@@ -1,7 +1,7 @@
 export const STATUS_LABELS: Record<string, string> = {
   draft: "下書き",
   checking: "買う前チェック中",
-  consulting: "親に相談中だよ",
+  consulting: "おとうさん・おかあさんに聞いているよ",
   approved: "買ってもいいよ",
   wait: "もう少し待ってみよう",
   discuss: "一緒に話してみよう",

@@ -18,7 +18,7 @@ export async function adjustWalletBalance(formData: FormData) {
     .eq("parent_user_id", user.id)
     .maybeSingle();
 
-  if (!wallet) redirect(`/parent/wallet?error=${encodeURIComponent("この子どものwalletが見つかりません。子どもプロフィールを作り直すか、初期設定を確認してください。")}`);
+  if (!wallet) redirect(`/parent/wallet?error=${encodeURIComponent("この子どものお金の入れものが見つかりません。子どもプロフィールを確認してください。")}`);
 
   const current = Number(wallet.balance);
   const isDecrease = parsed.data.transaction_type === "spending";
@@ -57,7 +57,7 @@ export async function markWishItemPurchased(formData: FormData) {
   }
 
   const { data: wallet } = await supabase.from("wallets").select("*").eq("child_profile_id", item.child_profile_id).eq("parent_user_id", user.id).maybeSingle();
-  if (!wallet) redirect(`/parent/consultations/${consultationId}?error=${encodeURIComponent("この子どものwalletが見つかりません")}`);
+  if (!wallet) redirect(`/parent/consultations/${consultationId}?error=${encodeURIComponent("この子どものお金の入れものが見つかりません")}`);
 
   const price = Number(item.price);
   const nextBalance = Number(wallet.balance) - price;

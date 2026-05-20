@@ -22,6 +22,17 @@ function setupChildRedirect(formData: FormData, error: string): never {
   redirect(`/setup/child?${params.toString()}`);
 }
 
+function childCreateErrorMessage(message?: string) {
+  if (!message) return "子どもプロフィールの作成に失敗しました。入力内容を確認してください。";
+  if (message.includes("child_profiles_age_group_check")) {
+    return "この年齢グループはDB側でまだ許可されていません。Supabase SQLの年齢グループ制約を更新してください。";
+  }
+  if (message.includes("child_profiles_nickname_check")) {
+    return "ニックネームは30文字以内で入力してください。";
+  }
+  return "子どもプロフィールの作成に失敗しました。入力内容を確認してください。";
+}
+
 export async function createChildProfileWithWallet(formData: FormData) {
   const { supabase, user } = await getSessionUser();
   if (!user) redirect("/login");
@@ -29,6 +40,7 @@ export async function createChildProfileWithWallet(formData: FormData) {
   const parsed = childProfileSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) setupChildRedirect(formData, firstValidationMessage(parsed.error));
 
+  const nextAction = formData.get("next_action") === "add_another" ? "add_another" : "dashboard";
   const pinHash = parsed.data.pin ? await bcrypt.hash(parsed.data.pin, 10) : null;
   const { data: child, error: childError } = await supabase
     .from("child_profiles")
@@ -45,7 +57,7 @@ export async function createChildProfileWithWallet(formData: FormData) {
     .single();
 
   if (childError || !child) {
-    setupChildRedirect(formData, "子どもプロフィールの作成に失敗しました。少し時間をおいて再度お試しください。");
+    setupChildRedirect(formData, childCreateErrorMessage(childError?.message));
   }
 
   const { data: wallet, error: walletError } = await supabase
@@ -55,7 +67,7 @@ export async function createChildProfileWithWallet(formData: FormData) {
     .single();
 
   if (walletError || !wallet) {
-    setupChildRedirect(formData, "walletの作成に失敗しました。子どもプロフィールを確認してください。");
+    setupChildRedirect(formData, "お金の入れものを作成できませんでした。子どもプロフィールを確認してください。");
   }
 
   if (parsed.data.initial_balance > 0) {
@@ -66,7 +78,7 @@ export async function createChildProfileWithWallet(formData: FormData) {
       transaction_type: "income",
       amount: parsed.data.initial_balance,
       category: "initial",
-      memo: "初期残高",
+      memo: "最初にあるお金",
       created_by_role: "parent",
     });
   }
@@ -80,6 +92,7 @@ export async function createChildProfileWithWallet(formData: FormData) {
     { onConflict: "user_id" },
   );
 
+  if (nextAction === "add_another") redirect("/setup/child?created=1");
   redirect("/parent/dashboard");
 }
 

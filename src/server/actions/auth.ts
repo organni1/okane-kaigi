@@ -2,8 +2,8 @@
 
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
-import { loginSchema, resendEmailSchema, signupSchema } from "@/lib/validations/auth";
 import { createClient } from "@/lib/supabase/server";
+import { loginSchema, resendEmailSchema, signupSchema } from "@/lib/validations/auth";
 
 function authErrorMessage(message: string) {
   const normalized = message.toLowerCase();

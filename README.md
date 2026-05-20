@@ -68,7 +68,7 @@ RLSは親ユーザーごとに `parent_user_id = auth.uid()` で分離します�
 </a>
 ```
 
-signup後は `/signup/check-email` に遷移します。確認メールのリンクを開くと `/auth/confirm` でsession cookieが作成され、`/setup/child` へ進みます。
+signup後は `/signup/check-email?email=...` に遷移します。確認メールのリンクを開くと `/auth/confirm` でsession cookieが作成され、`/setup/child` へ進みます。
 
 ## 確認メールが届かない時のチェック
 
@@ -81,7 +81,9 @@ signup後は `/signup/check-email` に遷移します。確認メールのリン
 3. Authentication > Emails / SMTP Settingsを確認する
 4. Custom SMTP未設定の場合は、SupabaseのデフォルトSMTP制限に当たっていないか確認する
 5. Gmail側で迷惑メール、プロモーション、すべてのメールを検索する
-6. 同じメールで何度も試している場合は、少し待ってから `/signup/check-email` で再送する
+6. 同じメールで何度も試している場合は、少し待ってから再送する
+
+再送は、`/signup/check-email?email=...` の固定表示されたメール宛に行います。再送画面でメールアドレスを直接入力させるUIはありません。`/login` から再送画面へ進む場合は、先にログイン画面のメール欄へ対象メールを入力してください。
 
 本番運用ではResend、SendGrid、Postmark、AWS SESなどのCustom SMTP設定を推奨します。
 
@@ -99,9 +101,9 @@ signup後は `/signup/check-email` に遷移します。確認メールのリン
 大まかな流れ:
 
 1. `/signup` で親アカウントを作成する
-2. `/signup/check-email` で確認メール案内と再送導線を確認する
+2. `/signup/check-email?email=...` で確認メール案内と再送導線を確認する
 3. 確認メールを開き、`/setup/child` へ進む
-4. 子どもプロフィール、PIN、初期残高を作成する
+4. 子どもプロフィール、任意のPIN、初期残高を作成する
 5. Child Modeでほしいものを登録し、買う前チェックを送る
 6. Parent Modeで相談にコメントと判断を返す
 7. 子どもが相談結果を見る

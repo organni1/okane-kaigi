@@ -19,7 +19,7 @@ export async function GET(request: NextRequest) {
   const next = safeNextPath(request);
 
   if (!tokenHash || !type) {
-    return NextResponse.redirect(new URL("/login?error=確認リンクが正しくありません", request.url));
+    return NextResponse.redirect(new URL(`/login?error=${encodeURIComponent("確認リンクが正しくありません")}`, request.url));
   }
 
   const supabase = await createClient();

@@ -12,14 +12,14 @@ import { categoryImage, categoryLabel } from "@/lib/constants/categories";
 import { getSessionUser } from "@/lib/supabase/server";
 import { formatCurrency } from "@/lib/utils/formatCurrency";
 import { markWishItemPurchased } from "@/server/actions/wallet";
-import type { ChildProfile, PrePurchaseCheck, WishItem } from "@/types/database";
+import type { ChildProfile, WishItem } from "@/types/database";
 
 type ConsultationDetail = {
   id: string;
   child_profile_id: string;
+  wish_item_id: string;
   wish_items: WishItem | WishItem[] | null;
   child_profiles: ChildProfile | ChildProfile[] | null;
-  pre_purchase_checks: PrePurchaseCheck | PrePurchaseCheck[] | null;
 };
 
 function firstOrNull<T>(value: T | T[] | null | undefined) {
@@ -47,19 +47,24 @@ export default async function ConsultationDetailPage({ params, searchParams }: {
 
   const { data: consultation } = await supabase
     .from("consultations")
-    .select("*, child_profiles(*), wish_items(*), pre_purchase_checks(*)")
+    .select("*, child_profiles(*), wish_items(*)")
     .eq("id", id)
     .eq("parent_user_id", user.id)
     .maybeSingle();
-  if (!consultation) redirect("/parent/consultations?error=相談が見つかりません");
+  if (!consultation) redirect(`/parent/consultations?error=${encodeURIComponent("相談が見つかりません")}`);
 
   const detail = consultation as ConsultationDetail;
   const item = firstOrNull(detail.wish_items);
   const child = firstOrNull(detail.child_profiles);
-  const check = firstOrNull(detail.pre_purchase_checks);
-  if (!item || !child) redirect("/parent/consultations?error=相談に必要なデータが見つかりません");
+  if (!item || !child) redirect(`/parent/consultations?error=${encodeURIComponent("相談に必要なデータが見つかりません")}`);
 
   const { data: wallet } = await supabase.from("wallets").select("*").eq("child_profile_id", detail.child_profile_id).eq("parent_user_id", user.id).maybeSingle();
+  const { data: check } = await supabase
+    .from("pre_purchase_checks")
+    .select("*")
+    .eq("wish_item_id", detail.wish_item_id)
+    .eq("parent_user_id", user.id)
+    .maybeSingle();
   const { data: guide } = await supabase
     .from("conversation_guides")
     .select("*")
